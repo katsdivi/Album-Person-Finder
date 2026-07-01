@@ -10,7 +10,7 @@ from insightface.app import FaceAnalysis
 _app = None
 
 
-def get_face_app(use_gpu: bool = False):
+def get_face_app(use_gpu: bool = True):
     global _app
     if _app is None:
         _app = FaceAnalysis(name="buffalo_l")

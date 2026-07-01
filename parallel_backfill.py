@@ -1,11 +1,11 @@
 """
-Faster, parallel version of backfill.py. Uses multiple CPU cores at once
-(each core runs its own Drive-download + face-detection pipeline) instead
-of doing one photo at a time.
+CPU-only parallel backfill. Uses multiple CPU processes (each runs its own
+Drive-download + face-detection pipeline).
 
-On a typical 4-8 core laptop this is usually 4-8x faster than backfill.py.
-Safe to Ctrl+C at any point -- progress commits to the database every 50
-photos, and re-running skips anything already indexed.
+NOTE: If you have a GPU, use backfill.py instead -- it runs GPU inference on
+the main thread with parallel download threads and will be significantly faster.
+This script is for CPU-only machines where spawning N worker processes across
+cores is the best option.
 
 Usage:
     python parallel_backfill.py
