@@ -48,9 +48,6 @@ def run(folder_id: str, download_workers: int = 8):
 
     print(f"Using {download_workers} download threads + GPU inference.")
 
-    # Warm up the GPU model before the main loop so the first batch isn't slow.
-    extract_faces(b"")
-
     indexed, skipped_errors = 0, 0
     with db.get_conn() as conn:
         cur = conn.cursor()
