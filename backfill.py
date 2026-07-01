@@ -15,6 +15,7 @@ Usage:
 """
 import argparse
 import os
+import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from dotenv import load_dotenv
@@ -25,6 +26,15 @@ from face_index import extract_faces
 import db
 
 load_dotenv()
+
+# Google API client is not thread-safe; give each download thread its own instance.
+_thread_local = threading.local()
+
+
+def _thread_service():
+    if not hasattr(_thread_local, "service"):
+        _thread_local.service = get_drive_service()
+    return _thread_local.service
 
 
 def run(folder_id: str, download_workers: int = 8):
@@ -53,7 +63,7 @@ def run(folder_id: str, download_workers: int = 8):
         cur = conn.cursor()
 
         def _download(img):
-            return img, download_file_bytes(service, img["id"])
+            return img, download_file_bytes(_thread_service(), img["id"])
 
         with ThreadPoolExecutor(max_workers=download_workers) as pool:
             futures = {pool.submit(_download, img): img for img in new_images}
