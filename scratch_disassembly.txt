@@ -1,0 +1,336 @@
+  0           0 RESUME                   0
+
+  1           2 LOAD_CONST               0 ("\nPostgres + pgvector storage layer.\n\nTwo tables:\n  photos  -- one row per Drive image file we've processed (so re-running\n             backfill is idempotent and skips already-indexed files)\n  faces   -- one row per detected face, with a 512-dim embedding vector\n             pointing back at its photo\n\nRun `python db.py` once to create the schema on a fresh Supabase project.\n")
+              4 STORE_NAME               0 (__doc__)
+
+ 12           6 LOAD_CONST               1 (0)
+              8 LOAD_CONST               2 (None)
+             10 IMPORT_NAME              1 (os)
+             12 STORE_NAME               1 (os)
+
+ 13          14 LOAD_CONST               1 (0)
+             16 LOAD_CONST               3 (('contextmanager',))
+             18 IMPORT_NAME              2 (contextlib)
+             20 IMPORT_FROM              3 (contextmanager)
+             22 STORE_NAME               3 (contextmanager)
+             24 POP_TOP
+
+ 15          26 LOAD_CONST               1 (0)
+             28 LOAD_CONST               2 (None)
+             30 IMPORT_NAME              4 (psycopg2)
+             32 STORE_NAME               4 (psycopg2)
+
+ 16          34 LOAD_CONST               1 (0)
+             36 LOAD_CONST               2 (None)
+             38 IMPORT_NAME              5 (psycopg2.extras)
+             40 STORE_NAME               4 (psycopg2)
+
+ 17          42 LOAD_CONST               1 (0)
+             44 LOAD_CONST               4 (('register_vector',))
+             46 IMPORT_NAME              6 (pgvector.psycopg2)
+             48 IMPORT_FROM              7 (register_vector)
+             50 STORE_NAME               7 (register_vector)
+             52 POP_TOP
+
+ 18          54 LOAD_CONST               1 (0)
+             56 LOAD_CONST               5 (('load_dotenv',))
+             58 IMPORT_NAME              8 (dotenv)
+             60 IMPORT_FROM              9 (load_dotenv)
+             62 STORE_NAME               9 (load_dotenv)
+             64 POP_TOP
+
+ 20          66 PUSH_NULL
+             68 LOAD_NAME                9 (load_dotenv)
+             70 CALL                     0
+             78 POP_TOP
+
+ 22          80 LOAD_NAME                1 (os)
+             82 LOAD_ATTR               20 (environ)
+            102 LOAD_CONST               6 ('SUPABASE_DB_URL')
+            104 BINARY_SUBSCR
+            108 STORE_NAME              11 (DB_URL)
+
+ 23         110 LOAD_CONST               7 (512)
+            112 STORE_NAME              12 (EMBEDDING_DIM)
+
+ 25         114 LOAD_CONST               8 ('\nCREATE EXTENSION IF NOT EXISTS vector;\n\nCREATE TABLE IF NOT EXISTS photos (\n    id              TEXT PRIMARY KEY,      -- Google Drive file ID\n    name            TEXT NOT NULL,\n    folder_path     TEXT,                  -- human-readable path, e.g. "AKSHAY & SHREYA/Video"\n    web_view_link   TEXT,\n    thumbnail_link  TEXT,\n    face_count      INTEGER DEFAULT 0,\n    indexed_at      TIMESTAMPTZ DEFAULT now()\n);\n\nCREATE TABLE IF NOT EXISTS faces (\n    id          SERIAL PRIMARY KEY,\n    photo_id    TEXT REFERENCES photos(id) ON DELETE CASCADE,\n    bbox        JSONB,\n    embedding   VECTOR(')
+
+ 42         116 LOAD_NAME               12 (EMBEDDING_DIM)
+            118 FORMAT_VALUE             0
+            120 LOAD_CONST               9 (') NOT NULL\n);\n\n-- Approximate nearest-neighbor index for fast cosine search at scale.\n-- Safe to re-run; Postgres will skip if it already exists.\nCREATE INDEX IF NOT EXISTS faces_embedding_idx\n    ON faces USING ivfflat (embedding vector_cosine_ops)\n    WITH (lists = 100);\n')
+
+ 25         122 BUILD_STRING             3
+            124 STORE_NAME              13 (SCHEMA_SQL)
+
+ 53         126 LOAD_NAME                3 (contextmanager)
+
+ 54         128 LOAD_CONST              10 (<code object get_conn at 0x102991250, file "/Users/divyamkataria/Family Photo Finder/drive_client.py", line 53>)
+            130 MAKE_FUNCTION            0
+
+ 53         132 CALL                     0
+
+ 54         140 STORE_NAME              14 (get_conn)
+
+ 67         142 LOAD_CONST              11 (<code object init_schema at 0x102b52f10, file "/Users/divyamkataria/Family Photo Finder/drive_client.py", line 67>)
+            144 MAKE_FUNCTION            0
+            146 STORE_NAME              15 (init_schema)
+
+ 74         148 LOAD_CONST              12 ('photo_id')
+            150 LOAD_NAME               16 (str)
+            152 LOAD_CONST              13 ('return')
+            154 LOAD_NAME               17 (bool)
+            156 BUILD_TUPLE              4
+            158 LOAD_CONST              14 (<code object is_photo_indexed at 0x102b5f880, file "/Users/divyamkataria/Family Photo Finder/drive_client.py", line 74>)
+            160 MAKE_FUNCTION            4 (annotations)
+            162 STORE_NAME              18 (is_photo_indexed)
+
+ 79         164 LOAD_CONST              15 (<code object insert_photo at 0x102aca530, file "/Users/divyamkataria/Family Photo Finder/drive_client.py", line 79>)
+            166 MAKE_FUNCTION            0
+            168 STORE_NAME              19 (insert_photo)
+
+ 90         170 LOAD_CONST              16 (<code object insert_face at 0x102a3f5a0, file "/Users/divyamkataria/Family Photo Finder/drive_client.py", line 90>)
+            172 MAKE_FUNCTION            0
+            174 STORE_NAME              20 (insert_face)
+
+ 97         176 LOAD_CONST              19 ((60, 0.5))
+            178 LOAD_CONST              17 (<code object search_similar_faces at 0x102d3cad0, file "/Users/divyamkataria/Family Photo Finder/drive_client.py", line 97>)
+            180 MAKE_FUNCTION            1 (defaults)
+            182 STORE_NAME              21 (search_similar_faces)
+
+119         184 LOAD_NAME               22 (__name__)
+            186 LOAD_CONST              18 ('__main__')
+            188 COMPARE_OP              40 (==)
+            192 POP_JUMP_IF_FALSE        8 (to 210)
+
+120         194 PUSH_NULL
+            196 LOAD_NAME               15 (init_schema)
+            198 CALL                     0
+            206 POP_TOP
+            208 RETURN_CONST             2 (None)
+
+119     >>  210 RETURN_CONST             2 (None)
+
+Disassembly of <code object get_conn at 0x102991250, file "/Users/divyamkataria/Family Photo Finder/drive_client.py", line 53>:
+ 53           0 RETURN_GENERATOR
+              2 POP_TOP
+              4 RESUME                   0
+
+ 55           6 LOAD_GLOBAL              1 (NULL + psycopg2)
+             16 LOAD_ATTR                2 (connect)
+             36 LOAD_GLOBAL              4 (DB_URL)
+             46 CALL                     1
+             54 STORE_FAST               0 (conn)
+
+ 56          56 LOAD_GLOBAL              7 (NULL + register_vector)
+             66 LOAD_FAST                0 (conn)
+             68 CALL                     1
+             76 POP_TOP
+
+ 57          78 NOP
+
+ 58          80 LOAD_FAST                0 (conn)
+             82 YIELD_VALUE              3
+             84 RESUME                   1
+             86 POP_TOP
+
+ 59          88 LOAD_FAST                0 (conn)
+             90 LOAD_ATTR                9 (NULL|self + commit)
+            110 CALL                     0
+            118 POP_TOP
+            120 NOP
+
+ 64         122 LOAD_FAST                0 (conn)
+            124 LOAD_ATTR               15 (NULL|self + close)
+            144 CALL                     0
+            152 POP_TOP
+            154 RETURN_CONST             0 (None)
+        >>  156 PUSH_EXC_INFO
+
+ 60         158 LOAD_GLOBAL             10 (Exception)
+            168 CHECK_EXC_MATCH
+            170 POP_JUMP_IF_FALSE       18 (to 208)
+            172 POP_TOP
+
+ 61         174 LOAD_FAST                0 (conn)
+            176 LOAD_ATTR               13 (NULL|self + rollback)
+            196 CALL                     0
+            204 POP_TOP
+
+ 62         206 RAISE_VARARGS            0
+
+ 60     >>  208 RERAISE                  0
+        >>  210 COPY                     3
+            212 POP_EXCEPT
+            214 RERAISE                  1
+        >>  216 PUSH_EXC_INFO
+
+ 64         218 LOAD_FAST                0 (conn)
+            220 LOAD_ATTR               15 (NULL|self + close)
+            240 CALL                     0
+            248 POP_TOP
+            250 RERAISE                  0
+        >>  252 COPY                     3
+            254 POP_EXCEPT
+            256 RERAISE                  1
+        >>  258 CALL_INTRINSIC_1         3 (INTRINSIC_STOPITERATION_ERROR)
+            260 RERAISE                  1
+ExceptionTable:
+  4 to 76 -> 258 [0] lasti
+  80 to 118 -> 156 [0]
+  122 to 154 -> 258 [0] lasti
+  156 to 208 -> 210 [1] lasti
+  210 to 214 -> 216 [0]
+  216 to 250 -> 252 [1] lasti
+  252 to 256 -> 258 [0] lasti
+
+Disassembly of <code object init_schema at 0x102b52f10, file "/Users/divyamkataria/Family Photo Finder/drive_client.py", line 67>:
+ 67           0 RESUME                   0
+
+ 68           2 LOAD_GLOBAL              1 (NULL + get_conn)
+             12 CALL                     0
+             20 BEFORE_WITH
+             22 STORE_FAST               0 (conn)
+
+ 69          24 LOAD_FAST                0 (conn)
+             26 LOAD_ATTR                3 (NULL|self + cursor)
+             46 CALL                     0
+             54 BEFORE_WITH
+             56 STORE_FAST               1 (cur)
+
+ 70          58 LOAD_FAST                1 (cur)
+             60 LOAD_ATTR                5 (NULL|self + execute)
+             80 LOAD_GLOBAL              6 (SCHEMA_SQL)
+             90 CALL                     1
+             98 POP_TOP
+
+ 69         100 LOAD_CONST               0 (None)
+            102 LOAD_CONST               0 (None)
+            104 LOAD_CONST               0 (None)
+            106 CALL                     2
+            114 POP_TOP
+
+ 68     >>  116 LOAD_CONST               0 (None)
+            118 LOAD_CONST               0 (None)
+            120 LOAD_CONST               0 (None)
+            122 CALL                     2
+            130 POP_TOP
+
+ 71     >>  132 LOAD_GLOBAL              9 (NULL + print)
+            142 LOAD_CONST               1 ('Schema ready.')
+            144 CALL                     1
+            152 POP_TOP
+            154 RETURN_CONST             0 (None)
+
+ 69     >>  156 PUSH_EXC_INFO
+            158 WITH_EXCEPT_START
+            160 POP_JUMP_IF_TRUE         1 (to 164)
+            162 RERAISE                  2
+        >>  164 POP_TOP
+            166 POP_EXCEPT
+            168 POP_TOP
+            170 POP_TOP
+            172 JUMP_BACKWARD           29 (to 116)
+        >>  174 COPY                     3
+            176 POP_EXCEPT
+            178 RERAISE                  1
+
+ 68     >>  180 PUSH_EXC_INFO
+            182 WITH_EXCEPT_START
+            184 POP_JUMP_IF_TRUE         1 (to 188)
+            186 RERAISE                  2
+        >>  188 POP_TOP
+            190 POP_EXCEPT
+            192 POP_TOP
+            194 POP_TOP
+            196 JUMP_BACKWARD           33 (to 132)
+        >>  198 COPY                     3
+            200 POP_EXCEPT
+            202 RERAISE                  1
+ExceptionTable:
+  22 to 54 -> 180 [1] lasti
+  56 to 98 -> 156 [2] lasti
+  100 to 114 -> 180 [1] lasti
+  156 to 164 -> 174 [4] lasti
+  166 to 178 -> 180 [1] lasti
+  180 to 188 -> 198 [3] lasti
+
+Disassembly of <code object is_photo_indexed at 0x102b5f880, file "/Users/divyamkataria/Family Photo Finder/drive_client.py", line 74>:
+ 74           0 RESUME                   0
+
+ 75           2 LOAD_FAST                0 (cur)
+              4 LOAD_ATTR                1 (NULL|self + execute)
+             24 LOAD_CONST               1 ('SELECT 1 FROM photos WHERE id = %s')
+             26 LOAD_FAST                1 (photo_id)
+             28 BUILD_TUPLE              1
+             30 CALL                     2
+             38 POP_TOP
+
+ 76          40 LOAD_FAST                0 (cur)
+             42 LOAD_ATTR                3 (NULL|self + fetchone)
+             62 CALL                     0
+             70 LOAD_CONST               0 (None)
+             72 IS_OP                    1
+             74 RETURN_VALUE
+
+Disassembly of <code object insert_photo at 0x102aca530, file "/Users/divyamkataria/Family Photo Finder/drive_client.py", line 79>:
+ 79           0 RESUME                   0
+
+ 80           2 LOAD_FAST                0 (cur)
+              4 LOAD_ATTR                1 (NULL|self + execute)
+
+ 81          24 LOAD_CONST               1 ('\n        INSERT INTO photos (id, name, folder_path, web_view_link, thumbnail_link, face_count)\n        VALUES (%s, %s, %s, %s, %s, %s)\n        ON CONFLICT (id) DO NOTHING\n        ')
+
+ 86          26 LOAD_FAST                1 (photo_id)
+             28 LOAD_FAST                2 (name)
+             30 LOAD_FAST                3 (folder_path)
+             32 LOAD_FAST                4 (web_view_link)
+             34 LOAD_FAST                5 (thumbnail_link)
+             36 LOAD_FAST                6 (face_count)
+             38 BUILD_TUPLE              6
+
+ 80          40 CALL                     2
+             48 POP_TOP
+             50 RETURN_CONST             0 (None)
+
+Disassembly of <code object insert_face at 0x102a3f5a0, file "/Users/divyamkataria/Family Photo Finder/drive_client.py", line 90>:
+ 90           0 RESUME                   0
+
+ 91           2 LOAD_FAST                0 (cur)
+              4 LOAD_ATTR                1 (NULL|self + execute)
+
+ 92          24 LOAD_CONST               1 ('INSERT INTO faces (photo_id, bbox, embedding) VALUES (%s, %s, %s)')
+
+ 93          26 LOAD_FAST                1 (photo_id)
+             28 LOAD_GLOBAL              2 (psycopg2)
+             38 LOAD_ATTR                4 (extras)
+             58 LOAD_ATTR                7 (NULL|self + Json)
+             78 LOAD_FAST                2 (bbox)
+             80 CALL                     1
+             88 LOAD_FAST                3 (embedding)
+             90 BUILD_TUPLE              3
+
+ 91          92 CALL                     2
+            100 POP_TOP
+            102 RETURN_CONST             0 (None)
+
+Disassembly of <code object search_similar_faces at 0x102d3cad0, file "/Users/divyamkataria/Family Photo Finder/drive_client.py", line 97>:
+ 97           0 RESUME                   0
+
+103           2 LOAD_FAST                0 (cur)
+              4 LOAD_ATTR                1 (NULL|self + execute)
+
+104          24 LOAD_CONST               1 ('\n        SELECT p.id, p.name, p.folder_path, p.web_view_link, p.thumbnail_link,\n               MIN(f.embedding <=> %s) AS distance\n        FROM faces f\n        JOIN photos p ON p.id = f.photo_id\n        WHERE f.embedding <=> %s < %s\n        GROUP BY p.id, p.name, p.folder_path, p.web_view_link, p.thumbnail_link\n        ORDER BY distance ASC\n        LIMIT %s\n        ')
+
+114          26 LOAD_FAST                1 (query_embedding)
+             28 LOAD_FAST                1 (query_embedding)
+             30 LOAD_FAST                3 (max_distance)
+             32 LOAD_FAST                2 (limit)
+             34 BUILD_TUPLE              4
+
+103          36 CALL                     2
+             44 POP_TOP
+
+116          46 LOAD_FAST                0 (cur)
+             48 LOAD_ATTR                3 (NULL|self + fetchall)
+             68 CALL                     0
+             76 RETURN_VALUE
