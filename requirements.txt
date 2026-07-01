@@ -2,7 +2,7 @@ google-api-python-client==2.137.0
 google-auth-httplib2==0.2.0
 google-auth-oauthlib==1.2.1
 insightface==0.7.3
-onnxruntime-gpu==1.27.0
+onnxruntime-gpu==1.18.1
 opencv-python-headless==4.10.0.84
 numpy==1.26.4
 psycopg2-binary==2.9.9
